@@ -1,0 +1,23 @@
+services:
+  hldm:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GAMEDIR: gamedir/agmodx
+    ports:
+      - 27017:27017/udp
+      - 27017:27017/tcp
+    expose:
+      - 27017/udp
+    entrypoint: "./entrypoint.sh"
+    command: -game valve +maxplayers 12 +ip 0.0.0.0 -port 27017 +map crossfire +rcon_password "asd"
+    # Required to allow input to console of HLDS
+    stdin_open: true
+    tty: true
+    develop:
+      watch:
+        - path: C:/Users/rtxa/Documents/GitHub/hldm-docker/gamedir/agmodx
+          target: /home/hlds_user/hlds/valve
+          action: sync
+    
