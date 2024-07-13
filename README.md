@@ -1,54 +1,49 @@
-# Build
+# Build Image
 
 ```bash
 docker build -t onlyrtxa/hldm-docker:steam_legacy .
 ```
 
-# How to develop with this container
+# How to Develop with this Container
 
-## 1. Mount volume and restart container whenever you need to update changes
+There are a some options to improve your workflow using this container:
 
-We mount a volume with the custom game files we require for our server into `/tmp/gamedir/`. 
-Then, this directory is mirrored at `/home/hlds_user/hlds/valve`.
+## 1. Mount Volume and Restart Container
 
-```bash
-docker run --rm -ti -p 27015:27015/udp -v C:/Users/rtxa/gamedir-agmodx:/tmp/gamedir/ onlyrtxa/hldm-docker:steam_legacy
-```
-
-## 2. Mount volume and sync as needed
-
-We mount a volume with the custom game files we require for our server into `/tmp/gamedir/`. 
-Then, this directory is mirrored at `/home/hlds_user/hlds/valve`.
+1. Mount a volume with the custom game files required for the server into `/tmp/gamedir/`.
+2. This directory is sync on startup at `/home/hlds_user/hlds/valve`.
+3. Restart the container whenever you need to update changes.
 
 ```bash
 docker run --rm -ti -p 27015:27015/udp -v C:/Users/rtxa/gamedir-agmodx:/tmp/gamedir/ onlyrtxa/hldm-docker:steam_legacy
 ```
 
-It's synced just at startup, because I couldn't find a way to keep it sync because volume don't trigger **inotify** events
- when using WSL, so nothing to do in my side. To workaround this, execute this script to keep it sync as needed.
+> Cons of using this way if that if you have a lot of files to copy, it will slow down your workflow.
+
+## 2. Mount Volume and Sync as Needed
+
+1. Mount a volume with the custom game files required for the server into `/tmp/gamedir/`.
+2. This directory is sync on startup at `/home/hlds_user/hlds/valve`.
+3. To keep the volume synced, execute the following script:
 
 ```bash
 docker exec <container-name> ./sync_script.sh
 ```
 
-## 2. Use Docker Compose watch mode
+> The volume is synced only at startup because inotify events are not triggered when using WSL as it bypass Linux kernel filesystem. Other way would be to use polling, but that's overkilling.
 
-I find this the best way, only for one thing, you can't use absolute paths for COPY in container, so you have to put the game files where the dockerfile is located, otherwise it wouldn't work.
+## 3. Use Docker Compose Watch Mode
 
-After that, just run in your terminal
+1. Place the game files in the same directory as the Dockerfile, (absolute paths for COPY in the container are not supported. You can place them in `gamedir`, git will ignore that directory.
+2. Run the following command to start the container in watch mode and rebuild on changes:
 
 ```bash
-docker compose up -w --build
+docker-compose up -w --build
 ```
 
-You can't omit --build if you're not gonna changes the files for a while, I guess..
+> Detached mode (`-d`) does not work with watch mode, so you can use the following command instead:
+>```bash
+>docker-compose watch &
+>```
 
-> Issue I found is that port are not opening or not working with default 27015, try with others like 27016
-
-
-Detacthed mode doesn't work with watch mode, you have to use this:
-```bash
-docker-compose up -d --build
-
-docker compose watch &
-```
+> There may be some issues with the default port 27015, so you may need to try other ports like 27016.
