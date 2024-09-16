@@ -20,4 +20,5 @@ services:
         - path: C:/Users/rtxa/Documents/GitHub/hldm-docker/gamedir/agmodx
           target: /home/hlds_user/hlds/valve
           action: sync
+          x-initialSync: true
     
